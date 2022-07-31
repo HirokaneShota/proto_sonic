@@ -37,15 +37,13 @@ private:
     MOTOR_ANGLE   nowMorter;                    /* 最新のモータのエンコーダ  */
 
     UltraSonic();                               /* コンストラクタ            */
-    ~UltraSonic();                              /* デストラクタ              */
-
     int8_t  calc();                             /* 平均化してmm単位で取得    */
 
 public:
 
     uint16_t distanceCM;                          /* 距離情報(CM)            　*/
     double distanceMM;
-
+    ~UltraSonic();                              /* デストラクタ              */
     int16_t getDistance();                      /* 距離の取得                */
     int8_t  update();                           /* distance更新              */
 
