@@ -11,6 +11,7 @@
 #include "app.h"
 #include "etroboc_ext.h"
 #include "workspace/include/system.h"
+#include "workspace/include/Steering.h"
 // 超音波センサー
 #include "workspace/include/UltraSonic.h"
 //#include "workspace/include/Calculation/BrightCalc.h"
@@ -58,16 +59,23 @@ void start_task(intptr_t unused)
 /* メインタスク */
 void main_task(intptr_t unused)
 {
-	uint16_t distance;
+	double distance;
+    MOTOR_POWER motor_power;
     UltraSonic ultrasonic = UltraSonic::getInstance();
     UltraSonicSensor ultrasonicsensor = UltraSonicSensor::getInstance();
+    Steering&		  steering		= Steering::getInstance();
     //センサー初期化
     ultrasonicsensor.init();
-
-    //while(1){
-    distance = ultrasonic.getDistance();
-    printf("%d\n",distance);
-    ultrasonic.update();
-    //}
+    motor_power.right=10;
+    motor_power.left=10;
+    
+    while(1){
+        steering.update();
+        steering.run(motor_power);
+        ultrasonic.update();
+        distance = ultrasonic.getDistance();
+        //printf("%lf\n",distance);
+        tslp_tsk(20 * 1000U);
+    }
     ext_tsk();
 }

@@ -19,6 +19,8 @@
 /* ------------------------------------------------------------------------- */
 /* Define宣言																 */
 /* ------------------------------------------------------------------------- */
+#define PI 3.141592653589793
+#define DIST ((PI) * (double)CAR_WHEEL_WIDTH) / 360.0f
 
 /* ------------------------------------------------------------------------- */
 /* 構造体定義																 */
@@ -34,18 +36,16 @@ private:
     MOTOR_ANGLE   prevMorter;                   /* 前回のモータのエンコーダ  */
     MOTOR_ANGLE   nowMorter;                    /* 最新のモータのエンコーダ  */
 
-
     UltraSonic();                               /* コンストラクタ            */
+    ~UltraSonic();                              /* デストラクタ              */
+
     int8_t  calc();                             /* 平均化してmm単位で取得    */
 
 public:
 
     uint16_t distanceCM;                          /* 距離情報(CM)            　*/
-    uint16_t distanceMM_r;                        /* 距離情報(MM)            　*/
-    uint16_t distanceMM_l;
-    uint16_t distanceMM;
+    double distanceMM;
 
-    ~UltraSonic();                              /* デストラクタ              */
     int16_t getDistance();                      /* 距離の取得                */
     int8_t  update();                           /* distance更新              */
 

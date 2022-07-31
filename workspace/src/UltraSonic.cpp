@@ -14,6 +14,7 @@
 #include "UltraSonic.h"
 #include"../include/Steering.h"
 #include "UltraSonicSensor.h"
+
 /* ------------------------------------------------------------------------- */
 /* 関数名	: UltraSonic::UltraSonic										 */
 /* 機能名	: コンストラクタ												 */
@@ -50,7 +51,7 @@ UltraSonic::~UltraSonic( void ){}
 int16_t UltraSonic::getDistance( void ) 
 {
 	/* 距離(mm単位)を返す */
-	return distanceMM_r;
+	return distanceMM;
 }
 
 /* ------------------------------------------------------------------------- */
@@ -72,7 +73,7 @@ int8_t UltraSonic::update( void ) {
 
 	/* 距離(cm単位)の取得 */
 	distanceCM = USS.getDistance();
-
+	calc();
 	/* エラーチェック */
 	/* 正常ならOK、異常ならNGを返す */
 	if ( distanceCM == 0 ) {
@@ -91,7 +92,9 @@ int8_t UltraSonic::update( void ) {
 /* 作成日	: 2022/07/16		筈尾  辰也		新規作成					 */
 /* ------------------------------------------------------------------------- */
 int8_t UltraSonic::calc(void) {
-
+	int32 wheelDistR;
+	int32 wheelDistL;
+	double dist;
 	/* モーター制御クラスの作成 */
 	Steering &steering = Steering::getInstance();
 
@@ -99,15 +102,12 @@ int8_t UltraSonic::calc(void) {
 	if ( prevDisCM == 0 ) {
 		return SYS_OK;
 	}
-
 	/* 基準点取得 */
 	/* 前回の取得からCM単位に変更があれば基準点とする */
-	if ( distanceCM != prevDisCM ){
-		critDisCM = distanceCM;
-	}
-
-	/* 基準点が 0 なら処理しない */
-	if ( critDisCM == 0 ) {
+	if ( distanceMM == 0 ||distanceCM != prevDisCM ){
+		/* 初処理時または基準点更新時 = 基準点と同距離 */
+		distanceMM = distanceCM;
+		prevMorter = steering.getMotorAngle();			/* モータ角取得 */
 		return SYS_OK;
 	}
 
@@ -116,20 +116,17 @@ int8_t UltraSonic::calc(void) {
 	/* モータ値正常チェック */
 	// モータ値異常時は0が入るので、チェック不可？
 
-	/* 初処理時または基準点更新時 = 基準点と同距離 */
-	if ( distanceMM == 0 || distanceCM != prevDisCM) {
-		distanceMM = distanceCM;
-		prevMorter = steering.getMotorAngle();			/* モータ角取得 */
-		return SYS_OK;
-	}
 	/* 現在のモータ角度 */
 	nowMorter = steering.getMotorAngle();
-
+	wheelDistR=((double)(( nowMorter.right - prevMorter.right ) * DIST))/10;
+	wheelDistL=((double)(( nowMorter.left - prevMorter.left ) * DIST))/10;
+	dist=(wheelDistR+wheelDistL)/2.0f;
 	/* 二回目以降 = 前回の値からモータ角の変化分を足し引きしたものがMM単位の距離 */
 	//ここの計算式Define でまとめる　直径の10とかもDefine定義したほうが良い？？
-	distanceMM_r = distanceMM_r - ( nowMorter.right - prevMorter.right ) * CAR_WHEEL_WIDTH * 3.14 / 360;
-	distanceMM_l = distanceMM_l - ( nowMorter.left - prevMorter.left ) * CAR_WHEEL_WIDTH * 3.14 / 360;
-
+	distanceMM = (double)(distanceMM -dist );
+	if( distanceMM < 0 ){
+		distanceMM = 0;
+	}
 	/* モータ値更新 */
 	prevMorter = steering.getMotorAngle();
 	/* --------------------------------------------------------------------- */
